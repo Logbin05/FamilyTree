@@ -14,7 +14,7 @@ export function Sidebar({
   onSaveNode,
 }: SidebarProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     name: "",
     age: "",

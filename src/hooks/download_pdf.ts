@@ -2,10 +2,12 @@
 import type { NodeProps } from "@type/node";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import { downloadNodesAsJson } from "./save";
 
 (pdfMake as any).vfs = (pdfFonts as any).vfs;
 
 export async function DownloadPDF(nodes: NodeProps[], svg?: SVGSVGElement) {
+  downloadNodesAsJson(nodes);
   const content: any[] = [];
 
   if (svg) {
