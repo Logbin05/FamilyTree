@@ -147,7 +147,7 @@ export function Sidebar({
               ➕{isOpen && <span className="font-medium">Добавить ветку</span>}
             </button>
           </li>
-
+          <hr className="border border-primary mx-auto w-9" />
           <li>
             <button
               type="button"
@@ -170,6 +170,8 @@ export function Sidebar({
             </button>
           </li>
 
+          <hr className="border border-primary mx-auto w-9" />
+
           <li>
             <button
               type="button"
@@ -177,6 +179,16 @@ export function Sidebar({
               className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
             >
               ⬇️{isOpen && <span className="font-medium">Скачать</span>}
+            </button>
+          </li>
+
+          <li>
+            <button
+              type="button"
+              onClick={() => DownloadPDF(nodes, svgRef.current!)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+            >
+              📤{isOpen && <span className="font-medium">Загрузить</span>}
             </button>
           </li>
         </ul>
