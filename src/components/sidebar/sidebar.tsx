@@ -12,9 +12,12 @@ export function Sidebar({
   onToggle,
   onRemoveNode,
   onSaveNode,
+  edges,
+  onLoadNodes,
 }: SidebarProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [editing, setEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editing, setEditing] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -23,6 +26,38 @@ export function Sidebar({
     biography: "",
     avatar: "",
   });
+
+  function handleUploadClick() {
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      if (json.nodes && Array.isArray(json.nodes)) {
+        onLoadNodes({ nodes: json.nodes, edges: json.edges ?? [] });
+        return;
+      }
+
+
+      if (Array.isArray(json)) {
+        onLoadNodes({ nodes: json, edges: [] });
+        return;
+      }
+
+      alert("Неверный формат JSON");
+      console.error("Ошибка формата JSON:", json);
+    } catch (error) {
+      console.error("Ошибка при чтении JSON:", error);
+      alert("Ошибка чтения файла");
+    }
+  }
+
 
   function handleEditClick() {
     if (!selectedNode) return;
@@ -59,6 +94,14 @@ export function Sidebar({
         ${isOpen ? "w-[20%] items-start" : "w-[60px] items-center"}
       `}
     >
+      <input
+        type="file"
+        accept="application/json"
+        className="hidden"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
+
       <button
         onClick={onToggle}
         className="mb-4 text-white bg-third/30 flex justify-center hover:bg-third/50 px-3 py-2 rounded-xl w-full text-2xl"
@@ -147,7 +190,7 @@ export function Sidebar({
               ➕{isOpen && <span className="font-medium">Добавить ветку</span>}
             </button>
           </li>
-
+          <hr className="border border-primary mx-auto w-9" />
           <li>
             <button
               type="button"
@@ -170,13 +213,25 @@ export function Sidebar({
             </button>
           </li>
 
+          <hr className="border border-primary mx-auto w-9" />
+
           <li>
             <button
               type="button"
-              onClick={() => DownloadPDF(nodes, svgRef.current!)}
+              onClick={() => DownloadPDF(nodes, edges ?? [], svgRef.current!)}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
             >
               ⬇️{isOpen && <span className="font-medium">Скачать</span>}
+            </button>
+          </li>
+
+          <li>
+            <button
+              type="button"
+              onClick={handleUploadClick}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+            >
+              📤{isOpen && <span className="font-medium">Загрузить</span>}
             </button>
           </li>
         </ul>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import type { NodeProps } from "@type/node";
 import type { Link } from "@type/canvas_area";
@@ -9,6 +10,25 @@ export function Layout() {
   const [nodes, setNodes] = useState<NodeProps[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [selectedNodeID, setSelectedNodeID] = useState<number | null>(null);
+
+  function loadNodesFromJSON(data: { nodes: any[]; edges: Link[] }) {
+    const fixedNodes = data.nodes.map((n: any) => ({
+      node: n.node ? n.node : n,
+      onMouseDown: () => {},
+    }));
+
+    fixedNodes.forEach((n: any) => {
+      if (n.node.x === undefined) n.node.x = 2500;
+      if (n.node.y === undefined) n.node.y = 2500;
+    });
+
+    setNodes(fixedNodes);
+    setEdges(data.edges);
+
+    if (fixedNodes.length > 0) {
+      setSelectedNodeID(fixedNodes[0].node.id);
+    }
+  }
 
   function addNode() {
     if (selectedNodeID === null) {
@@ -34,11 +54,21 @@ export function Layout() {
     const fatherID = nodes.length + 2;
 
     const father: NodeProps = {
-      node: { id: fatherID, name: `Родитель ${fatherID}`, x: baseX - 50 * 2, y: baseY },
+      node: {
+        id: fatherID,
+        name: `Родитель ${fatherID}`,
+        x: baseX - 100,
+        y: baseY,
+      },
       onMouseDown: () => {},
     };
     const mother: NodeProps = {
-      node: { id: motherID, name: `Родитель ${motherID}`, x: baseX + 50 * 2, y: baseY },
+      node: {
+        id: motherID,
+        name: `Родитель ${motherID}`,
+        x: baseX + 100,
+        y: baseY,
+      },
       onMouseDown: () => {},
     };
 
@@ -77,18 +107,19 @@ export function Layout() {
     );
   }
 
-
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar
         onAddedNode={addNode}
         isOpen={sidebarOpen}
+        edges={edges}
         onToggle={() => setSidebarOpen((prev) => !prev)}
         selectedNode={nodes.find((n) => n.node.id === selectedNodeID)}
         onRemoveNode={removeNode}
         onChangeName={changeName}
         onSaveNode={saveNode}
         nodes={nodes}
+        onLoadNodes={loadNodesFromJSON}
       />
 
       <CanvasArea

@@ -2,10 +2,13 @@
 import type { NodeProps } from "@type/node";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import { downloadGraphAsJson } from "./save";
+import type { Link } from "@type/canvas_area";
 
 (pdfMake as any).vfs = (pdfFonts as any).vfs;
 
-export async function DownloadPDF(nodes: NodeProps[], svg?: SVGSVGElement) {
+export async function DownloadPDF(nodes: NodeProps[], edges: Link[] = [], svg?: SVGSVGElement) {
+  downloadGraphAsJson(nodes, edges!);
   const content: any[] = [];
 
   if (svg) {
@@ -45,23 +48,26 @@ export async function DownloadPDF(nodes: NodeProps[], svg?: SVGSVGElement) {
     margin: [0, 10, 0, 20],
   });
   content.push({
-    text: "ℹ️ Описание семьи",
+    text: "ℹ Описание семьи",
     fontSize: 18,
     margin: [0, 0, 0, 10],
   });
 
   nodes.forEach((n) => {
-    content.push({ text: `✏️ Имя: ${n.node.name}`, fontSize: 12 });
+    content.push({ text: `⏣ Имя: ${n.node.name}`, fontSize: 12 });
     if (n.node.birthYear)
-      content.push({ text: `📅 Год рождения: ${n.node.birthYear}`, fontSize: 12 });
+      content.push({
+        text: `⏣ Год рождения: ${n.node.birthYear}`,
+        fontSize: 12,
+      });
     if (n.node.location)
       content.push({
-        text: `🌃 Место рождения: ${n.node.location}`,
+        text: `⏣ Место рождения: ${n.node.location}`,
         fontSize: 12,
       });
     if (n.node.biography)
       content.push(
-        { text: "Биография:", fontSize: 12, bold: true },
+        { text: "⏣ Биография:", fontSize: 12, bold: true },
         { text: n.node.biography, fontSize: 12 }
       );
     content.push({
