@@ -41,7 +41,7 @@ export function CanvasArea({
     }
   }
 
-  const onMouseMove = (e: React.MouseEvent) => {
+  function onMouseMove(e: React.MouseEvent) {
     if (draggingNode !== null && svgRef.current) {
       const rect = svgRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -63,7 +63,7 @@ export function CanvasArea({
     }
   };
 
-  const onMouseUp = () => {
+  function onMouseUp() {
     setDraggingNode(null);
     setPanning(false);
     setLastMousePos(null);
