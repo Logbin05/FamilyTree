@@ -32,7 +32,7 @@ export function CanvasArea({
   }
 
   function handleTapNode(nodeID: number) {
-
+    setDraggingNode(nodeID);
     onSelectNode(nodeID);
     setEditingNodeID(nodeID);
   }
@@ -123,6 +123,7 @@ export function CanvasArea({
       startPanOrDrag(touch.clientX, touch.clientY);
     }
   }
+
 
   function onTouchMove(e: React.TouchEvent) {
     const touch = e.touches[0];
