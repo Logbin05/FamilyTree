@@ -4,8 +4,7 @@ export interface NodeProps {
     name: string;
     x: number;
     y: number;
-    age?: number;
-    birthYear?: string | number;
+    birthYear?: string;
     location?: string;
     biography?: string;
   };

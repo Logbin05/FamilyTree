@@ -16,13 +16,11 @@ export function CanvasArea({
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingNode, setDraggingNode] = useState<number | null>(null);
   const [panning, setPanning] = useState(false);
-  const [lastMousePos, setLastMousePos] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const [lastPos, setLastPos] = useState<{ x: number; y: number } | null>(null);
   const [editingNodeID, setEditingNodeID] = useState<number | null>(null);
 
   const CANVAS_SIZE = 5000;
+  const NODE_RADIUS = 30;
 
   function onMouseDownNode(id: number) {
     setDraggingNode(id);
@@ -31,6 +29,11 @@ export function CanvasArea({
 
   function onDoubleClickNode(id: number) {
     setEditingNodeID(id);
+  }
+
+  function handleTapNode(nodeID: number) {
+    setEditingNodeID(nodeID);
+    onSelectNode(nodeID);
   }
 
   function handleChangeNode(
@@ -44,41 +47,79 @@ export function CanvasArea({
     );
   }
 
-
-  function onMouseDownCanvas(e: React.MouseEvent) {
-    if (e.target === svgRef.current) {
+  function startPanOrDrag(x: number, y: number, targetNodeID?: number) {
+    if (targetNodeID !== undefined) {
+      setDraggingNode(targetNodeID);
+      onSelectNode(targetNodeID);
+    } else {
       setPanning(true);
-      setLastMousePos({ x: e.clientX, y: e.clientY });
-      setEditingNodeID(null);
     }
+    setLastPos({ x, y });
+    setEditingNodeID(null);
   }
 
-  function onMouseMove(e: React.MouseEvent) {
+  function movePanOrDrag(x: number, y: number) {
     if (draggingNode !== null && svgRef.current) {
       const rect = svgRef.current.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / zoom;
-      const y = (e.clientY - rect.top) / zoom;
+      let nodeX = (x - rect.left) / zoom;
+      let nodeY = (y - rect.top) / zoom;
+
+      nodeX = Math.max(NODE_RADIUS, Math.min(CANVAS_SIZE - NODE_RADIUS, nodeX));
+      nodeY = Math.max(NODE_RADIUS, Math.min(CANVAS_SIZE - NODE_RADIUS, nodeY));
 
       setNodes((prev) =>
         prev.map((n) =>
-          n.node.id === draggingNode ? { ...n, node: { ...n.node, x, y } } : n
+          n.node.id === draggingNode
+            ? { ...n, node: { ...n.node, x: nodeX, y: nodeY } }
+            : n
         )
       );
-    } else if (panning && containerRef.current && lastMousePos) {
-      const dx = lastMousePos.x - e.clientX;
-      const dy = lastMousePos.y - e.clientY;
-
+    } else if (panning && containerRef.current && lastPos) {
+      const dx = lastPos.x - x;
+      const dy = lastPos.y - y;
       containerRef.current.scrollLeft += dx;
       containerRef.current.scrollTop += dy;
+    }
+    setLastPos({ x, y });
+  }
 
-      setLastMousePos({ x: e.clientX, y: e.clientY });
+  function endPanOrDrag() {
+    setDraggingNode(null);
+    setPanning(false);
+    setLastPos(null);
+  }
+
+  function onMouseDown(e: React.MouseEvent) {
+    if (e.target === svgRef.current) startPanOrDrag(e.clientX, e.clientY);
+  }
+  function onMouseMove(e: React.MouseEvent) {
+    movePanOrDrag(e.clientX, e.clientY);
+  }
+  function onMouseUp() {
+    endPanOrDrag();
+  }
+
+  function onTouchStart(e: React.TouchEvent) {
+    const touch = e.touches[0];
+    if (!touch) return;
+    if ((e.target as HTMLElement).tagName === "circle") {
+      const nodeId = Number(
+        (e.target as SVGCircleElement).parentElement?.getAttribute("data-id")
+      );
+      startPanOrDrag(touch.clientX, touch.clientY, nodeId);
+    } else {
+      startPanOrDrag(touch.clientX, touch.clientY);
     }
   }
 
-  function onMouseUp() {
-    setDraggingNode(null);
-    setPanning(false);
-    setLastMousePos(null);
+  function onTouchMove(e: React.TouchEvent) {
+    const touch = e.touches[0];
+    if (!touch) return;
+    movePanOrDrag(touch.clientX, touch.clientY);
+  }
+
+  function onTouchEnd() {
+    endPanOrDrag();
   }
 
   return (
@@ -95,10 +136,13 @@ export function CanvasArea({
           transform: `scale(${zoom})`,
           transformOrigin: "center center",
         }}
-        onMouseDown={onMouseDownCanvas}
+        onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
-        className="cursor-grab active:outline-secondary outline-1"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="cursor-pointer active:outline-secondary outline-1"
       >
         {edges.map((edge, idx) => {
           const fromNode = nodes.find((n) => n.node.id === edge.from);
@@ -113,8 +157,10 @@ export function CanvasArea({
           return (
             <g
               key={n.node.id}
+              data-id={n.node.id}
               onMouseDown={() => onMouseDownNode(n.node.id)}
               onDoubleClick={() => onDoubleClickNode(n.node.id)}
+              onTouchStart={() => handleTapNode(n.node.id)}
               className="cursor-grab"
             >
               <circle

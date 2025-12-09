@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { NodeProps } from "@type/node";
 
 interface DynamicWatchProps {
@@ -10,7 +10,6 @@ interface DynamicWatchProps {
 export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
   const editableKeys: (keyof Omit<NodeProps["node"], "id" | "x" | "y">)[] = [
     "name",
-    "age",
     "birthYear",
     "location",
     "biography",
@@ -18,7 +17,6 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
 
   const labels: Record<(typeof editableKeys)[number], string> = {
     name: "Имя",
-    age: "Возраст",
     birthYear: "Год рождения",
     location: "Место жительства",
     biography: "Биография",
@@ -30,17 +28,15 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
     >
   >({});
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const initialData: Partial<
       Record<keyof Omit<NodeProps["node"], "id" | "x" | "y">, string | number>
     > = {};
     editableKeys.forEach((key) => {
       const value = node[key];
-      if (value !== undefined) {
-        initialData[key] = value;
-      } else {
-        initialData[key] = "";
-      }
+      initialData[key] = value !== undefined ? value : "";
     });
     setFormData(initialData);
   }, [node, editableKeys]);
@@ -50,8 +46,7 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
     value: string
   ) {
     let parsedValue: string | number = value;
-
-    if (key === "age" || key === "birthYear") {
+    if (key === "birthYear") {
       const n = Number(value);
       parsedValue = isNaN(n) ? "" : n;
     }
@@ -60,18 +55,32 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
     onChange({ [key]: parsedValue });
   }
 
-
+  function handleFocus(e: React.FocusEvent<HTMLInputElement>) {
+    if (containerRef.current) {
+      const rect = e.target.getBoundingClientRect();
+      containerRef.current.scrollTo({
+        top: rect.top - 50,
+        behavior: "smooth",
+      });
+    }
+  }
 
   return (
-    <div className="p-2 bg-wrapper rounded-lg shadow-sm flex flex-col gap-2 w-64">
+    <div
+      ref={containerRef}
+      className="p-2 bg-wrapper rounded-lg shadow-sm flex flex-col gap-2 w-full max-w-xs sm:max-w-sm"
+    >
       {editableKeys.map((key) => (
-        <div key={key} className="grid grid-cols-2">
-          <label className="text-sm font-medium text-white">{labels[key]}</label>
+        <div key={key} className="grid grid-cols-2 gap-2">
+          <label className="text-sm font-medium text-white">
+            {labels[key]}
+          </label>
           <input
             type="text"
             value={formData[key] ?? ""}
             onChange={(e) => handleChange(key, e.target.value)}
-            className="border rounded px-2 py-1 text-white"
+            onFocus={handleFocus}
+            className="border rounded px-2 py-1 text-white w-full"
           />
         </div>
       ))}

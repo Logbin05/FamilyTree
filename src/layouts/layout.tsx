@@ -153,7 +153,7 @@ export function Layout() {
 
       <div
         className="xs:hidden md:flex flex-col w-auto p-2 bg-wrapper
-        rounded-3xl absolute right-20 top-130"
+        rounded-3xl absolute right-20 top-130 justify-center items-center"
       >
         <button onClick={zoomIn} className="text-white lg:cursor-pointer">
           <BiZoomIn className="size-10" />
@@ -161,7 +161,7 @@ export function Layout() {
 
         <hr className="border-2 border-primary mx-auto w-9 my-5" />
 
-        <button onClick={zoomOut} className="text-white lg:cursor-pointer">
+        <button onClick={zoomOut} className="text-white lg:cursor-pointer active:bg-primary/40">
           <BiZoomOut className="size-10" />
         </button>
       </div>
