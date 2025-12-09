@@ -4,7 +4,6 @@ export interface NodeProps {
     name: string;
     x: number;
     y: number;
-    avatar?: string;
     age?: number;
     birthYear?: string | number;
     location?: string;

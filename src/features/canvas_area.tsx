@@ -1,8 +1,11 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Edge } from "@features/components/edge";
 import type { CanvasAreaProps } from "@type/canvas_area";
+import { DynamicWatch } from "@components/nodes/dynamic_watch";
+import type { NodeProps } from "@type/node";
 
 export function CanvasArea({
+  zoom,
   nodes,
   edges,
   setNodes,
@@ -17,35 +20,44 @@ export function CanvasArea({
     x: number;
     y: number;
   } | null>(null);
+  const [editingNodeID, setEditingNodeID] = useState<number | null>(null);
 
   const CANVAS_SIZE = 5000;
-
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollLeft =
-        CANVAS_SIZE / 2 - containerRef.current.clientWidth / 2;
-      containerRef.current.scrollTop =
-        CANVAS_SIZE / 2 - containerRef.current.clientHeight / 2;
-    }
-  }, []);
 
   function onMouseDownNode(id: number) {
     setDraggingNode(id);
     onSelectNode(id);
   }
 
+  function onDoubleClickNode(id: number) {
+    setEditingNodeID(id);
+  }
+
+  function handleChangeNode(
+    nodeId: number,
+    data: Partial<Omit<NodeProps["node"], "id" | "x" | "y">>
+  ) {
+    setNodes((prevNodes) =>
+      prevNodes.map((n) =>
+        n.node.id === nodeId ? { ...n, node: { ...n.node, ...data } } : n
+      )
+    );
+  }
+
+
   function onMouseDownCanvas(e: React.MouseEvent) {
     if (e.target === svgRef.current) {
       setPanning(true);
       setLastMousePos({ x: e.clientX, y: e.clientY });
+      setEditingNodeID(null);
     }
   }
 
   function onMouseMove(e: React.MouseEvent) {
     if (draggingNode !== null && svgRef.current) {
       const rect = svgRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const x = (e.clientX - rect.left) / zoom;
+      const y = (e.clientY - rect.top) / zoom;
 
       setNodes((prev) =>
         prev.map((n) =>
@@ -61,23 +73,28 @@ export function CanvasArea({
 
       setLastMousePos({ x: e.clientX, y: e.clientY });
     }
-  };
+  }
 
   function onMouseUp() {
     setDraggingNode(null);
     setPanning(false);
     setLastMousePos(null);
-  };
+  }
 
   return (
     <main
-      className="flex-1 m-4 rounded-2xl shadow-lg bg-white overflow-hidden"
+      id="board"
       ref={containerRef}
+      className="flex-1 m-4 rounded-2xl shadow-lg bg-white overflow-hidden relative"
     >
       <svg
         ref={svgRef}
         width={CANVAS_SIZE}
         height={CANVAS_SIZE}
+        style={{
+          transform: `scale(${zoom})`,
+          transformOrigin: "center center",
+        }}
         onMouseDown={onMouseDownCanvas}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
@@ -88,13 +105,7 @@ export function CanvasArea({
           const toNode = nodes.find((n) => n.node.id === edge.to);
           if (!fromNode || !toNode) return null;
 
-          return (
-            <Edge
-              key={idx}
-              from={{ x: fromNode.node.x, y: fromNode.node.y }}
-              to={{ x: toNode.node.x, y: toNode.node.y }}
-            />
-          );
+          return <Edge key={idx} from={fromNode.node} to={toNode.node} />;
         })}
 
         {nodes.map((n) => {
@@ -103,6 +114,7 @@ export function CanvasArea({
             <g
               key={n.node.id}
               onMouseDown={() => onMouseDownNode(n.node.id)}
+              onDoubleClick={() => onDoubleClickNode(n.node.id)}
               className="cursor-grab"
             >
               <circle
@@ -123,6 +135,20 @@ export function CanvasArea({
               >
                 {n.node.name}
               </text>
+
+              {editingNodeID === n.node.id && (
+                <foreignObject
+                  x={n.node.x + 40}
+                  y={n.node.y - 50}
+                  width={250}
+                  height={300}
+                >
+                  <DynamicWatch
+                    node={n.node}
+                    onChange={(data) => handleChangeNode(n.node.id, data)}
+                  />
+                </foreignObject>
+              )}
             </g>
           );
         })}

@@ -1,8 +1,15 @@
 import { useRef, useState } from "react";
-import { BiMenu, BiX } from "react-icons/bi";
 import { TbBinaryTree2 } from "react-icons/tb";
 import type { SidebarProps } from "@type/sidebar";
 import { DownloadPDF } from "@hooks/download_pdf";
+import {
+  BiDownload,
+  BiMenu,
+  BiPlus,
+  BiSolidTrashAlt,
+  BiUpload,
+  BiX,
+} from "react-icons/bi";
 
 export function Sidebar({
   onAddedNode,
@@ -44,7 +51,6 @@ export function Sidebar({
         return;
       }
 
-
       if (Array.isArray(json)) {
         onLoadNodes({ nodes: json, edges: [] });
         return;
@@ -59,19 +65,6 @@ export function Sidebar({
   }
 
 
-  function handleEditClick() {
-    if (!selectedNode) return;
-    setFormData({
-      name: selectedNode.node.name || "",
-      age: selectedNode.node.age?.toString() || "",
-      birthYear: selectedNode.node.birthYear?.toString() || "",
-      location: selectedNode.node.location || "",
-      biography: selectedNode.node.biography || "",
-      avatar: selectedNode.node.avatar || "",
-    });
-    setEditing(true);
-  }
-
   function handleSave() {
     if (!selectedNode) return;
     onSaveNode(selectedNode.node.id, {
@@ -80,7 +73,6 @@ export function Sidebar({
       birthYear: Number(formData.birthYear),
       location: formData.location,
       biography: formData.biography,
-      avatar: formData.avatar,
     });
     setEditing(false);
   }
@@ -89,7 +81,7 @@ export function Sidebar({
     <header
       className={`
         bg-wrapper fixed h-[90vh] m-4 rounded-2xl shadow-lg p-4
-        flex flex-col justify-start
+        flex flex-col justify-start z-9999
         transition-all duration-300
         ${isOpen ? "w-[20%] items-start" : "w-[60px] items-center"}
       `}
@@ -187,20 +179,19 @@ export function Sidebar({
               className="w-full flex items-center justify-center gap-2 px-4 py-2
                  rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
             >
-              ➕{isOpen && <span className="font-medium">Добавить ветку</span>}
+              {isOpen ? (
+                <>
+                  <BiPlus />
+                  <span className="font-medium">Добавить ветку</span>
+                </>
+              ) : (
+                <span>
+                  <BiPlus />
+                </span>
+              )}
             </button>
           </li>
           <hr className="border border-primary mx-auto w-9" />
-          <li>
-            <button
-              type="button"
-              onClick={handleEditClick}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2
-                 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
-            >
-              ✏️{isOpen && <span className="font-medium">Редактировать</span>}
-            </button>
-          </li>
 
           <li>
             <button
@@ -209,7 +200,16 @@ export function Sidebar({
               className="w-full flex items-center justify-center gap-2 px-4 py-2
                  rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
             >
-              🗑️{isOpen && <span className="font-medium">Удалить</span>}
+              {isOpen ? (
+                <>
+                  <BiSolidTrashAlt />
+                  <span className="font-medium">Удалить</span>
+                </>
+              ) : (
+                <span>
+                  <BiSolidTrashAlt className="size-5" />
+                </span>
+              )}
             </button>
           </li>
 
@@ -221,7 +221,16 @@ export function Sidebar({
               onClick={() => DownloadPDF(nodes, edges ?? [], svgRef.current!)}
               className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
             >
-              ⬇️{isOpen && <span className="font-medium">Скачать</span>}
+              {isOpen ? (
+                <>
+                  <BiDownload />
+                  <span className="font-medium">Скачать</span>
+                </>
+              ) : (
+                <span>
+                  <BiDownload className="size-5" />
+                </span>
+              )}
             </button>
           </li>
 
@@ -229,9 +238,22 @@ export function Sidebar({
             <button
               type="button"
               onClick={handleUploadClick}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+              className="w-full flex items-center justify-center gap-2
+                px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50
+                transition-all duration-200 text-white"
             >
-              📤{isOpen && <span className="font-medium">Загрузить</span>}
+              {isOpen ? (
+                <>
+                  <BiUpload />
+                  <span className="font-medium">Загрузить</span>
+                </>
+              ) : (
+                <>
+                  <span>
+                    <BiUpload className="size-5" />
+                  </span>
+                </>
+              )}
             </button>
           </li>
         </ul>
