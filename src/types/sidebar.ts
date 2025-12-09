@@ -5,12 +5,11 @@ import type { Link } from "./canvas_area";
 export interface SidebarProps {
   nodes: NodeProps[];
   edges?: Link[];
-  onAddedNode: () => void;
-  selectedNode?: NodeProps;
   isOpen: boolean;
   onToggle: () => void;
+  selectedNode?: NodeProps;
   onRemoveNode: (id: number) => void;
   onChangeName: (name: string) => void;
+  onAddedNode: (type: "parent" | "child") => void;
   onLoadNodes: (data: { nodes: any[]; edges: Link[] }) => void;
-  onSaveNode: (id: number, data: Partial<NodeProps["node"]>) => void;
 }

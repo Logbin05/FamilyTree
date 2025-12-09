@@ -4,12 +4,13 @@ import type { SidebarProps } from "@type/sidebar";
 import { DownloadPDF } from "@hooks/download_pdf";
 import {
   BiDownload,
-  BiPlus,
   BiSolidTrashAlt,
   BiUpload,
   BiMenu,
   BiX,
 } from "react-icons/bi";
+import { HiUsers } from "react-icons/hi";
+import { FaChildReaching } from "react-icons/fa6";
 
 export function Sidebar({
   onAddedNode,
@@ -100,17 +101,36 @@ export function Sidebar({
             <li>
               <button
                 type="button"
-                onClick={onAddedNode}
+                onClick={() => onAddedNode("parent")}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
               >
                 {isOpen ? (
                   <>
-                    <BiPlus />
-                    <span className="font-medium">Добавить ветку</span>
+                    <HiUsers className="size-10" />
+                    <span className="font-medium">Добавить родителей</span>
                   </>
                 ) : (
                   <span>
-                    <BiPlus />
+                    <HiUsers />
+                  </span>
+                )}
+              </button>
+            </li>
+
+            <li>
+              <button
+                type="button"
+                onClick={() => onAddedNode("child")}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+              >
+                {isOpen ? (
+                  <>
+                    <FaChildReaching className="size-10" />
+                    <span className="font-medium">Добавить ребёнка</span>
+                  </>
+                ) : (
+                  <span>
+                    <FaChildReaching />
                   </span>
                 )}
               </button>
@@ -182,13 +202,23 @@ export function Sidebar({
         <TbBinaryTree2 className="text-fourth text-3xl" />
 
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={onAddedNode}
-            className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
-          >
-            <BiPlus className="text-xl" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onAddedNode("parent")}
+              className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
+            >
+              <HiUsers className="text-xl" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onAddedNode("child")}
+              className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
+            >
+              <FaChildReaching className="text-xl" />
+            </button>
+          </div>
 
           <button
             type="button"

@@ -40,8 +40,9 @@ export function Layout() {
     }
   }
 
-  function addNode() {
+  function addNode(type: "parent" | "child" = "parent") {
     if (selectedNodeID === null) {
+
       const container = document.getElementById("board");
       let x = 400;
       let y = 100;
@@ -55,7 +56,7 @@ export function Layout() {
       setNodes((prev) => [
         ...prev,
         {
-          node: { id: meID, name: "Я", x: x, y: y },
+          node: { id: meID, name: "Я", x, y },
           onMouseDown: () => {},
         },
       ]);
@@ -66,38 +67,71 @@ export function Layout() {
     const parent = nodes.find((n) => n.node.id === selectedNodeID);
     if (!parent) return;
 
-    const baseX = parent.node.x;
-    const baseY = parent.node.y - 200;
+    if (type === "child") {
+      const childID = nodes.length + 1;
 
-    const motherID = nodes.length + 1;
-    const fatherID = nodes.length + 2;
+      const child: NodeProps = {
+        node: {
+          id: childID,
+          name: `Ребёнок ${childID}`,
+          x: parent.node.x,
+          y: parent.node.y + 200,
+        },
+        onMouseDown: () => {},
+      };
 
-    const father: NodeProps = {
-      node: {
-        id: fatherID,
-        name: `Родитель ${fatherID}`,
-        x: baseX - 100,
-        y: baseY,
-      },
-      onMouseDown: () => {},
-    };
-    const mother: NodeProps = {
-      node: {
-        id: motherID,
-        name: `Родитель ${motherID}`,
-        x: baseX + 100,
-        y: baseY,
-      },
-      onMouseDown: () => {},
-    };
+      setNodes((prev) => [...prev, child]);
+      setEdges((prev) => [...prev, { from: selectedNodeID, to: childID }]);
 
-    setNodes((prev) => [...prev, mother, father]);
+      return;
+    }
 
-    setEdges((prev) => [
-      ...prev,
-      { from: parent.node.id, to: motherID },
-      { from: parent.node.id, to: fatherID },
-    ]);
+    if (type === "parent") {
+      const baseX = parent.node.x;
+      const baseY = parent.node.y - 200;
+
+      const motherID = nodes.length + 1;
+      const fatherID = nodes.length + 2;
+
+      const mother: NodeProps = {
+        node: {
+          id: motherID,
+          name: `Родитель ${motherID}`,
+          x: baseX - 120,
+          y: baseY,
+        },
+        onMouseDown: () => {},
+      };
+
+      const father: NodeProps = {
+        node: {
+          id: fatherID,
+          name: `Родитель ${fatherID}`,
+          x: baseX + 120,
+          y: baseY,
+        },
+        onMouseDown: () => {},
+      };
+
+      setNodes((prev) => [...prev, mother, father]);
+
+      const children = nodes.filter((n) =>
+        edges.some((e) => e.from === parent.node.id && e.to === n.node.id)
+      );
+
+      const newEdges: Link[] = [
+        { from: motherID, to: parent.node.id },
+        { from: fatherID, to: parent.node.id },
+      ];
+
+      children.forEach((child) => {
+        newEdges.push({ from: motherID, to: child.node.id });
+        newEdges.push({ from: fatherID, to: child.node.id });
+      });
+
+      setEdges((prev) => [...prev, ...newEdges]);
+      return;
+    }
   }
 
   function changeName(newName: string) {
@@ -111,19 +145,45 @@ export function Layout() {
     );
   }
 
-  function removeNode(id: number) {
-    setNodes((prev) => prev.filter((n) => n.node.id !== id));
-    setEdges((prev) => prev.filter((e) => e.from !== id && e.to !== id));
+  function getDescendants(startID: number, edges: Link[]): number[] {
+    const result = new Set<number>();
+    const stack = [startID];
 
-    if (selectedNodeID === id) setSelectedNodeID(null);
+    while(stack.length > 0) {
+      const current = stack.pop();
+      const children = edges.filter((e) => e.from === current).map((e) => e.to);
+
+      for (const childID of children) {
+        if (!result.has(childID)) {
+          result.add(childID);
+          stack.push(childID);
+        }
+      }
+    }
+
+    result.delete(startID);
+    return Array.from(result);
   }
 
-  function saveNode(id: number, data: Partial<NodeProps["node"]>) {
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.node.id === id ? { ...n, node: { ...n.node, ...data } } : n
-      )
-    );
+  function removeNode(id: number) {
+    setEdges((prevEdges) => {
+      const descendants = getDescendants(id, prevEdges);
+      const idsToRemove = new Set<number>([id, ...descendants]);
+
+      const newEdges = prevEdges.filter(
+        (e) => !idsToRemove.has(e.from) && !idsToRemove.has(e.to)
+      );
+
+      setNodes((prevNodes) =>
+        prevNodes.filter((n) => !idsToRemove.has(n.node.id))
+      );
+
+      if (selectedNodeID !== null && idsToRemove.has(selectedNodeID)) {
+        setSelectedNodeID(null);
+      }
+
+      return newEdges;
+    });
   }
 
   return (
@@ -136,7 +196,6 @@ export function Layout() {
         selectedNode={nodes.find((n) => n.node.id === selectedNodeID)}
         onRemoveNode={removeNode}
         onChangeName={changeName}
-        onSaveNode={saveNode}
         nodes={nodes}
         onLoadNodes={loadNodesFromJSON}
       />
@@ -161,7 +220,10 @@ export function Layout() {
 
         <hr className="border-2 border-primary mx-auto w-9 my-5" />
 
-        <button onClick={zoomOut} className="text-white lg:cursor-pointer active:bg-primary/40">
+        <button
+          onClick={zoomOut}
+          className="text-white lg:cursor-pointer active:bg-primary/40"
+        >
           <BiZoomOut className="size-10" />
         </button>
       </div>
