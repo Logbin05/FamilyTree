@@ -27,7 +27,7 @@ export function Layout() {
       onMouseDown: () => {},
     }));
 
-    fixedNodes.forEach((n: any) => {
+    fixedNodes.forEach((n) => {
       if (n.node.x === undefined) n.node.x = 2500;
       if (n.node.y === undefined) n.node.y = 2500;
     });
@@ -40,7 +40,7 @@ export function Layout() {
     }
   }
 
-  function addNode() {
+  function addNode(type: "parent" | "child" = "parent") {
     if (selectedNodeID === null) {
       const container = document.getElementById("board");
       let x = 400;
@@ -54,54 +54,76 @@ export function Layout() {
       const meID = nodes.length + 1;
       setNodes((prev) => [
         ...prev,
-        {
-          node: { id: meID, name: "Я", x: x, y: y },
-          onMouseDown: () => {},
-        },
+        { node: { id: meID, name: "Я", x, y }, onMouseDown: () => {} },
       ]);
       setSelectedNodeID(meID);
       return;
     }
 
-    const parent = nodes.find((n) => n.node.id === selectedNodeID);
-    if (!parent) return;
+    const parentNode = nodes.find((n) => n.node.id === selectedNodeID);
+    if (!parentNode) return;
 
-    const baseX = parent.node.x;
-    const baseY = parent.node.y - 200;
+    if (type === "child") {
+      const childID = nodes.length + 1;
 
-    const motherID = nodes.length + 1;
-    const fatherID = nodes.length + 2;
+      const child: NodeProps = {
+        node: {
+          id: childID,
+          name: `Ребёнок ${childID}`,
+          x: parentNode.node.x,
+          y: parentNode.node.y + 200,
+        },
+        onMouseDown: () => {},
+      };
 
-    const father: NodeProps = {
-      node: {
-        id: fatherID,
-        name: `Родитель ${fatherID}`,
-        x: baseX - 100,
-        y: baseY,
-      },
-      onMouseDown: () => {},
-    };
-    const mother: NodeProps = {
-      node: {
-        id: motherID,
-        name: `Родитель ${motherID}`,
-        x: baseX + 100,
-        y: baseY,
-      },
-      onMouseDown: () => {},
-    };
+      setNodes((prev) => [...prev, child]);
+      setEdges((prev) => [...prev, { from: selectedNodeID, to: childID }]);
 
-    setNodes((prev) => [...prev, mother, father]);
+      return;
+    }
 
-    setEdges((prev) => [
-      ...prev,
-      { from: parent.node.id, to: motherID },
-      { from: parent.node.id, to: fatherID },
-    ]);
+    if (type === "parent") {
+      const baseX = parentNode.node.x;
+      const baseY = parentNode.node.y - 200;
+
+      const motherID = nodes.length + 1;
+      const fatherID = nodes.length + 2;
+
+      const mother: NodeProps = {
+        node: {
+          id: motherID,
+          name: `Родитель ${motherID}`,
+          x: baseX - 120,
+          y: baseY,
+        },
+        onMouseDown: () => {},
+      };
+
+      const father: NodeProps = {
+        node: {
+          id: fatherID,
+          name: `Родитель ${fatherID}`,
+          x: baseX + 120,
+          y: baseY,
+        },
+        onMouseDown: () => {},
+      };
+
+      setNodes((prev) => [...prev, mother, father]);
+
+      setEdges((prevEdges) => [
+        ...prevEdges,
+        { from: motherID, to: parentNode.node.id },
+        { from: fatherID, to: parentNode.node.id },
+      ]);
+
+      return;
+    }
   }
 
   function changeName(newName: string) {
     if (selectedNodeID === null) return;
+
     setNodes((prev) =>
       prev.map((n) =>
         n.node.id === selectedNodeID
@@ -111,19 +133,76 @@ export function Layout() {
     );
   }
 
-  function removeNode(id: number) {
-    setNodes((prev) => prev.filter((n) => n.node.id !== id));
-    setEdges((prev) => prev.filter((e) => e.from !== id && e.to !== id));
+  function getDescendants(startID: number, edges: Link[]): number[] {
+    const result = new Set<number>();
+    const stack = [startID];
 
-    if (selectedNodeID === id) setSelectedNodeID(null);
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) continue;
+
+      const children = edges.filter((e) => e.from === current).map((e) => e.to);
+
+      for (const childID of children) {
+        if (!result.has(childID)) {
+          result.add(childID);
+          stack.push(childID);
+        }
+      }
+    }
+
+    result.delete(startID);
+    return Array.from(result);
   }
 
-  function saveNode(id: number, data: Partial<NodeProps["node"]>) {
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.node.id === id ? { ...n, node: { ...n.node, ...data } } : n
-      )
+  function getAncestors(startID: number, edges: Link[]): number[] {
+    const result = new Set<number>();
+    const stack = [startID];
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) continue;
+
+      const parents = edges.filter((e) => e.to === current).map((e) => e.from);
+      for (const parentID of parents) {
+        if (!result.has(parentID)) {
+          result.add(parentID);
+          stack.push(parentID);
+        }
+      }
+    }
+
+    return Array.from(result);
+  }
+
+  function removeNode(id: number) {
+    const selectedNode = nodes.find((n) => n.node.id === id);
+    if (!selectedNode) return;
+
+    let idsToRemove = new Set<number>();
+
+    if (selectedNode.node.name === "Я") {
+      const descendants = getDescendants(id, edges);
+      const ancestors = getAncestors(id, edges);
+      idsToRemove = new Set<number>([id, ...descendants, ...ancestors]);
+    } else {
+      const ancestors = getAncestors(id, edges);
+      idsToRemove = new Set<number>([id, ...ancestors]);
+    }
+
+    const newEdges = edges.filter(
+      (e) => !idsToRemove.has(e.from) && !idsToRemove.has(e.to)
     );
+    const newNodes = nodes.filter((n) => !idsToRemove.has(n.node.id));
+
+    const newSelectedNodeID =
+      selectedNodeID !== null && idsToRemove.has(selectedNodeID)
+        ? null
+        : selectedNodeID;
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+    setSelectedNodeID(newSelectedNodeID);
   }
 
   return (
@@ -136,7 +215,6 @@ export function Layout() {
         selectedNode={nodes.find((n) => n.node.id === selectedNodeID)}
         onRemoveNode={removeNode}
         onChangeName={changeName}
-        onSaveNode={saveNode}
         nodes={nodes}
         onLoadNodes={loadNodesFromJSON}
       />
@@ -161,7 +239,10 @@ export function Layout() {
 
         <hr className="border-2 border-primary mx-auto w-9 my-5" />
 
-        <button onClick={zoomOut} className="text-white lg:cursor-pointer active:bg-primary/40">
+        <button
+          onClick={zoomOut}
+          className="text-white lg:cursor-pointer active:bg-primary/40"
+        >
           <BiZoomOut className="size-10" />
         </button>
       </div>

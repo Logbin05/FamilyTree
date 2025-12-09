@@ -59,7 +59,7 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
     if (containerRef.current) {
       const rect = e.target.getBoundingClientRect();
       containerRef.current.scrollTo({
-        top: rect.top - 50,
+        top: rect.y -2523,
         behavior: "smooth",
       });
     }
