@@ -68,6 +68,7 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
   return (
     <div
       ref={containerRef}
+      onTouchStart={(e) => e.stopPropagation()}
       className="p-2 bg-wrapper rounded-lg shadow-sm flex flex-col gap-2 w-full max-w-xs sm:max-w-sm"
     >
       {editableKeys.map((key) => (
