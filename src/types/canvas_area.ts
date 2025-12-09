@@ -6,8 +6,9 @@ export interface Link {
 }
 
 export interface CanvasAreaProps {
-  nodes: NodeProps[];
+  zoom: number;
   edges: Link[];
+  nodes: NodeProps[];
   setNodes: React.Dispatch<React.SetStateAction<NodeProps[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Link[]>>;
   onSelectNode: (id: number) => void;
