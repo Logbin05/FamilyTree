@@ -32,8 +32,9 @@ export function CanvasArea({
   }
 
   function handleTapNode(nodeID: number) {
-    setEditingNodeID(nodeID);
+
     onSelectNode(nodeID);
+    setEditingNodeID(nodeID);
   }
 
   function handleChangeNode(
@@ -59,27 +60,37 @@ export function CanvasArea({
   }
 
   function movePanOrDrag(x: number, y: number) {
+    if (!lastPos) return;
+
+    const dx = x - lastPos.x;
+    const dy = y - lastPos.y;
+
     if (draggingNode !== null && svgRef.current) {
-      const rect = svgRef.current.getBoundingClientRect();
-      let nodeX = (x - rect.left) / zoom;
-      let nodeY = (y - rect.top) / zoom;
-
-      nodeX = Math.max(NODE_RADIUS, Math.min(CANVAS_SIZE - NODE_RADIUS, nodeX));
-      nodeY = Math.max(NODE_RADIUS, Math.min(CANVAS_SIZE - NODE_RADIUS, nodeY));
-
       setNodes((prev) =>
         prev.map((n) =>
           n.node.id === draggingNode
-            ? { ...n, node: { ...n.node, x: nodeX, y: nodeY } }
+            ? {
+                ...n,
+                node: {
+                  ...n.node,
+                  x: Math.max(
+                    NODE_RADIUS,
+                    Math.min(CANVAS_SIZE - NODE_RADIUS, n.node.x + dx / zoom)
+                  ),
+                  y: Math.max(
+                    NODE_RADIUS,
+                    Math.min(CANVAS_SIZE - NODE_RADIUS, n.node.y + dy / zoom)
+                  ),
+                },
+              }
             : n
         )
       );
-    } else if (panning && containerRef.current && lastPos) {
-      const dx = lastPos.x - x;
-      const dy = lastPos.y - y;
-      containerRef.current.scrollLeft += dx;
-      containerRef.current.scrollTop += dy;
+    } else if (panning && containerRef.current) {
+      containerRef.current.scrollLeft -= dx;
+      containerRef.current.scrollTop -= dy;
     }
+
     setLastPos({ x, y });
   }
 
@@ -102,6 +113,7 @@ export function CanvasArea({
   function onTouchStart(e: React.TouchEvent) {
     const touch = e.touches[0];
     if (!touch) return;
+
     if ((e.target as HTMLElement).tagName === "circle") {
       const nodeId = Number(
         (e.target as SVGCircleElement).parentElement?.getAttribute("data-id")
@@ -126,7 +138,7 @@ export function CanvasArea({
     <main
       id="board"
       ref={containerRef}
-      className="flex-1 m-4 rounded-2xl shadow-lg bg-white overflow-hidden relative"
+      className="flex-1 m-4 rounded-2xl shadow-lg bg-white overflow-scroll relative touch-pan-y"
     >
       <svg
         ref={svgRef}
@@ -134,7 +146,8 @@ export function CanvasArea({
         height={CANVAS_SIZE}
         style={{
           transform: `scale(${zoom})`,
-          transformOrigin: "center center",
+          transformOrigin: "top left",
+          touchAction: "none",
         }}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
@@ -142,7 +155,7 @@ export function CanvasArea({
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className="cursor-pointer active:outline-secondary outline-1"
+        className="cursor-pointer"
       >
         {edges.map((edge, idx) => {
           const fromNode = nodes.find((n) => n.node.id === edge.from);
@@ -166,7 +179,7 @@ export function CanvasArea({
               <circle
                 cx={n.node.x}
                 cy={n.node.y}
-                r={30}
+                r={NODE_RADIUS}
                 fill={isSelected ? "#17613d" : "#22c55e"}
                 stroke={isSelected ? "#22c55e" : "none"}
                 strokeWidth={isSelected ? 3 : 0}
@@ -184,8 +197,8 @@ export function CanvasArea({
 
               {editingNodeID === n.node.id && (
                 <foreignObject
-                  x={n.node.x + 40}
-                  y={n.node.y - 50}
+                  x={n.node.x - 120}
+                  y={n.node.y + 60}
                   width={250}
                   height={300}
                 >

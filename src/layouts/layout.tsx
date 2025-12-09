@@ -27,7 +27,7 @@ export function Layout() {
       onMouseDown: () => {},
     }));
 
-    fixedNodes.forEach((n: any) => {
+    fixedNodes.forEach((n) => {
       if (n.node.x === undefined) n.node.x = 2500;
       if (n.node.y === undefined) n.node.y = 2500;
     });
@@ -42,7 +42,6 @@ export function Layout() {
 
   function addNode(type: "parent" | "child" = "parent") {
     if (selectedNodeID === null) {
-
       const container = document.getElementById("board");
       let x = 400;
       let y = 100;
@@ -55,17 +54,14 @@ export function Layout() {
       const meID = nodes.length + 1;
       setNodes((prev) => [
         ...prev,
-        {
-          node: { id: meID, name: "Я", x, y },
-          onMouseDown: () => {},
-        },
+        { node: { id: meID, name: "Я", x, y }, onMouseDown: () => {} },
       ]);
       setSelectedNodeID(meID);
       return;
     }
 
-    const parent = nodes.find((n) => n.node.id === selectedNodeID);
-    if (!parent) return;
+    const parentNode = nodes.find((n) => n.node.id === selectedNodeID);
+    if (!parentNode) return;
 
     if (type === "child") {
       const childID = nodes.length + 1;
@@ -74,8 +70,8 @@ export function Layout() {
         node: {
           id: childID,
           name: `Ребёнок ${childID}`,
-          x: parent.node.x,
-          y: parent.node.y + 200,
+          x: parentNode.node.x,
+          y: parentNode.node.y + 200,
         },
         onMouseDown: () => {},
       };
@@ -87,8 +83,8 @@ export function Layout() {
     }
 
     if (type === "parent") {
-      const baseX = parent.node.x;
-      const baseY = parent.node.y - 200;
+      const baseX = parentNode.node.x;
+      const baseY = parentNode.node.y - 200;
 
       const motherID = nodes.length + 1;
       const fatherID = nodes.length + 2;
@@ -115,27 +111,19 @@ export function Layout() {
 
       setNodes((prev) => [...prev, mother, father]);
 
-      const children = nodes.filter((n) =>
-        edges.some((e) => e.from === parent.node.id && e.to === n.node.id)
-      );
+      setEdges((prevEdges) => [
+        ...prevEdges,
+        { from: motherID, to: parentNode.node.id },
+        { from: fatherID, to: parentNode.node.id },
+      ]);
 
-      const newEdges: Link[] = [
-        { from: motherID, to: parent.node.id },
-        { from: fatherID, to: parent.node.id },
-      ];
-
-      children.forEach((child) => {
-        newEdges.push({ from: motherID, to: child.node.id });
-        newEdges.push({ from: fatherID, to: child.node.id });
-      });
-
-      setEdges((prev) => [...prev, ...newEdges]);
       return;
     }
   }
 
   function changeName(newName: string) {
     if (selectedNodeID === null) return;
+
     setNodes((prev) =>
       prev.map((n) =>
         n.node.id === selectedNodeID
@@ -149,8 +137,10 @@ export function Layout() {
     const result = new Set<number>();
     const stack = [startID];
 
-    while(stack.length > 0) {
+    while (stack.length > 0) {
       const current = stack.pop();
+      if (!current) continue;
+
       const children = edges.filter((e) => e.from === current).map((e) => e.to);
 
       for (const childID of children) {
@@ -165,25 +155,54 @@ export function Layout() {
     return Array.from(result);
   }
 
-  function removeNode(id: number) {
-    setEdges((prevEdges) => {
-      const descendants = getDescendants(id, prevEdges);
-      const idsToRemove = new Set<number>([id, ...descendants]);
+  function getAncestors(startID: number, edges: Link[]): number[] {
+    const result = new Set<number>();
+    const stack = [startID];
 
-      const newEdges = prevEdges.filter(
-        (e) => !idsToRemove.has(e.from) && !idsToRemove.has(e.to)
-      );
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) continue;
 
-      setNodes((prevNodes) =>
-        prevNodes.filter((n) => !idsToRemove.has(n.node.id))
-      );
-
-      if (selectedNodeID !== null && idsToRemove.has(selectedNodeID)) {
-        setSelectedNodeID(null);
+      const parents = edges.filter((e) => e.to === current).map((e) => e.from);
+      for (const parentID of parents) {
+        if (!result.has(parentID)) {
+          result.add(parentID);
+          stack.push(parentID);
+        }
       }
+    }
 
-      return newEdges;
-    });
+    return Array.from(result);
+  }
+
+  function removeNode(id: number) {
+    const selectedNode = nodes.find((n) => n.node.id === id);
+    if (!selectedNode) return;
+
+    let idsToRemove = new Set<number>();
+
+    if (selectedNode.node.name === "Я") {
+      const descendants = getDescendants(id, edges);
+      const ancestors = getAncestors(id, edges);
+      idsToRemove = new Set<number>([id, ...descendants, ...ancestors]);
+    } else {
+      const ancestors = getAncestors(id, edges);
+      idsToRemove = new Set<number>([id, ...ancestors]);
+    }
+
+    const newEdges = edges.filter(
+      (e) => !idsToRemove.has(e.from) && !idsToRemove.has(e.to)
+    );
+    const newNodes = nodes.filter((n) => !idsToRemove.has(n.node.id));
+
+    const newSelectedNodeID =
+      selectedNodeID !== null && idsToRemove.has(selectedNodeID)
+        ? null
+        : selectedNodeID;
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+    setSelectedNodeID(newSelectedNodeID);
   }
 
   return (
