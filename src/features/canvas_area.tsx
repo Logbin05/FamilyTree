@@ -22,11 +22,6 @@ export function CanvasArea({
   const CANVAS_SIZE = 5000;
   const NODE_RADIUS = 30;
 
-  function onMouseDownNode(id: number) {
-    setDraggingNode(id);
-    onSelectNode(id);
-  }
-
   function onDoubleClickNode(id: number) {
     setEditingNodeID(id);
   }
@@ -172,10 +167,13 @@ export function CanvasArea({
             <g
               key={n.node.id}
               data-id={n.node.id}
-              onMouseDown={() => onMouseDownNode(n.node.id)}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                startPanOrDrag(e.clientX, e.clientY, n.node.id);
+              }}
               onDoubleClick={() => onDoubleClickNode(n.node.id)}
               onTouchStart={() => handleTapNode(n.node.id)}
-              className="cursor-grab"
+              className="cursor-grab z-9999"
             >
               <circle
                 cx={n.node.x}
