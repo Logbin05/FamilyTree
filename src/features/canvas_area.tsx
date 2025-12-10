@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
+import type { NodeProps } from "@type/node";
 import { Edge } from "@features/components/edge";
 import type { CanvasAreaProps } from "@type/canvas_area";
 import { DynamicWatch } from "@components/nodes/dynamic_watch";
-import type { NodeProps } from "@type/node";
 
 export function CanvasArea({
   zoom,
@@ -49,9 +49,10 @@ export function CanvasArea({
       onSelectNode(targetNodeID);
     } else {
       setPanning(true);
+      setEditingNodeID(null);
     }
+
     setLastPos({ x, y });
-    setEditingNodeID(null);
   }
 
   function movePanOrDrag(x: number, y: number) {
@@ -110,15 +111,14 @@ export function CanvasArea({
     if (!touch) return;
 
     if ((e.target as HTMLElement).tagName === "circle") {
-      const nodeId = Number(
+      const nodeID = Number(
         (e.target as SVGCircleElement).parentElement?.getAttribute("data-id")
       );
-      startPanOrDrag(touch.clientX, touch.clientY, nodeId);
+      startPanOrDrag(touch.clientX, touch.clientY, nodeID);
     } else {
       startPanOrDrag(touch.clientX, touch.clientY);
     }
   }
-
 
   function onTouchMove(e: React.TouchEvent) {
     const touch = e.touches[0];
@@ -173,7 +173,7 @@ export function CanvasArea({
               }}
               onDoubleClick={() => onDoubleClickNode(n.node.id)}
               onTouchStart={() => handleTapNode(n.node.id)}
-              className="cursor-grab z-9999"
+              className="cursor-grab"
             >
               <circle
                 cx={n.node.x}
@@ -200,6 +200,9 @@ export function CanvasArea({
                   y={n.node.y + 60}
                   width={250}
                   height={300}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onMouseMove={(e) => e.stopPropagation()}
+                  onMouseUp={(e) => e.stopPropagation()}
                 >
                   <DynamicWatch
                     node={n.node}

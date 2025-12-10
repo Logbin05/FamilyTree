@@ -10,14 +10,14 @@ interface DynamicWatchProps {
 export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
   const editableKeys: (keyof Omit<NodeProps["node"], "id" | "x" | "y">)[] = [
     "name",
-    "birthYear",
+    "birthDate",
     "location",
     "biography",
   ];
 
   const labels: Record<(typeof editableKeys)[number], string> = {
     name: "Имя",
-    birthYear: "Год рождения",
+    birthDate: "Дата рождения",
     location: "Место жительства",
     biography: "Биография",
   };
@@ -45,10 +45,10 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
     key: keyof Omit<NodeProps["node"], "id" | "x" | "y">,
     value: string
   ) {
-    let parsedValue: string | number = value;
-    if (key === "birthYear") {
-      const n = Number(value);
-      parsedValue = isNaN(n) ? "" : n;
+    let parsedValue: string = value;
+    if (key === "birthDate") {
+      const n = value;
+      parsedValue = n;
     }
 
     setFormData((prev) => ({ ...prev, [key]: parsedValue }));
@@ -68,8 +68,11 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
   return (
     <div
       ref={containerRef}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseMove={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
-      className="p-2 bg-wrapper rounded-lg shadow-sm flex flex-col gap-2 w-full max-w-xs sm:max-w-sm"
+      className="p-2 bg-wrapper rounded-lg shadow-sm flex z-9999 flex-col gap-2 w-full max-w-xs sm:max-w-sm"
     >
       {editableKeys.map((key) => (
         <div key={key} className="grid grid-cols-2 gap-2">
