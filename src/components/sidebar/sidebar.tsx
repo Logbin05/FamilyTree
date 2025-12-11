@@ -108,7 +108,9 @@ export function Sidebar({
                 {isOpen ? (
                   <>
                     <HiUsers className="size-10" />
-                    <span className="font-light text-xl">Добавить родителей</span>
+                    <span className="font-light text-xl">
+                      Добавить родителей
+                    </span>
                   </>
                 ) : (
                   <span>
@@ -128,9 +130,7 @@ export function Sidebar({
                 {isOpen ? (
                   <>
                     <FaChildReaching className="size-8" />
-                    <span className="font-light text-xl">
-                      Добавить ребёнка
-                    </span>
+                    <span className="font-light text-xl">Добавить ребёнка</span>
                   </>
                 ) : (
                   <span>
@@ -209,47 +209,45 @@ export function Sidebar({
         className="bg-wrapper fixed bottom-0 left-0 w-full h-16 flex items-center
       justify-between px-4 z-50 rounded-t-2xl shadow-lg md:hidden"
       >
-        <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => onAddedNode("parent")}
-              className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
-            >
-              <HiUsers className="text-xl" />
-            </button>
+        <button
+          type="button"
+          onClick={() => onAddedNode("parent")}
+          className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
+        >
+          <HiUsers className="text-xl" />
+        </button>
 
-            <button
-              type="button"
-              onClick={() => onAddedNode("child")}
-              className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
-            >
-              <FaChildReaching className="text-xl" />
-            </button>
+        <button
+          type="button"
+          onClick={() => onAddedNode("child")}
+          className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
+        >
+          <FaChildReaching className="text-xl" />
+        </button>
 
-          <button
-            type="button"
-            onClick={() => selectedNode && onRemoveNode(selectedNode.node.id)}
-            className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
-          >
-            <BiSolidTrashAlt className="text-xl" />
-          </button>
+        <button
+          type="button"
+          onClick={() => selectedNode && onRemoveNode(selectedNode.node.id)}
+          className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
+        >
+          <BiSolidTrashAlt className="text-xl" />
+        </button>
 
-          <button
-            type="button"
-            onClick={() => DownloadPDF(nodes, edges ?? [], svgRef.current!)}
-            className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
-          >
-            <BiDownload className="text-xl" />
-          </button>
+        <button
+          type="button"
+          onClick={() => DownloadPDF(nodes, edges ?? [], svgRef.current!)}
+          className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
+        >
+          <BiDownload className="text-xl" />
+        </button>
 
-          <button
-            type="button"
-            onClick={handleUploadClick}
-            className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
-          >
-            <BiUpload className="text-xl" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleUploadClick}
+          className="flex items-center justify-center p-3 rounded-full bg-third/30 hover:bg-third/50 text-white"
+        >
+          <BiUpload className="text-xl" />
+        </button>
 
         <input
           type="file"
