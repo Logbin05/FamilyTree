@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { NodeProps } from "@type/node";
 import type { Link } from "@type/canvas_area";
 import { CanvasArea } from "@features/canvas_area";
@@ -12,6 +12,13 @@ export function Layout() {
   const [nodes, setNodes] = useState<NodeProps[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [selectedNodeID, setSelectedNodeID] = useState<number | null>(null);
+
+  const counterID = useRef<number>(1);
+  function generateID() {
+    const id = counterID.current;
+    counterID.current += 1;
+    return id;
+  }
 
   function zoomIn() {
     setZoom((z) => Math.min(2.5, z + 0.1));
@@ -38,6 +45,17 @@ export function Layout() {
     if (fixedNodes.length > 0) {
       setSelectedNodeID(fixedNodes[0].node.id);
     }
+
+    const maxIdInData = fixedNodes.reduce(
+      (acc, cur) => Math.max(acc, cur.node.id ?? 0),
+      0
+    );
+    const maxIdInEdges = data.edges.reduce(
+      (acc, cur) => Math.max(acc, cur.from, cur.to),
+      0
+    );
+    const maxId = Math.max(maxIdInData, maxIdInEdges, counterID.current - 1);
+    counterID.current = Math.max(counterID.current, maxId + 1);
   }
 
   function addNode(type: "parent" | "child" = "parent") {
@@ -51,7 +69,7 @@ export function Layout() {
         y = container.scrollTop + container.clientHeight / 2 / zoom;
       }
 
-      const meID = nodes.length + 1;
+      const meID = generateID();
       setNodes((prev) => [
         ...prev,
         { node: { id: meID, name: "Я", x, y }, onMouseDown: () => {} },
@@ -64,7 +82,7 @@ export function Layout() {
     if (!parentNode) return;
 
     if (type === "child") {
-      const childID = nodes.length + 1;
+      const childID = generateID();
 
       const child: NodeProps = {
         node: {
@@ -86,8 +104,8 @@ export function Layout() {
       const baseX = parentNode.node.x;
       const baseY = parentNode.node.y - 200;
 
-      const motherID = nodes.length + 1;
-      const fatherID = nodes.length + 2;
+      const motherID = generateID();
+      const fatherID = generateID();
 
       const mother: NodeProps = {
         node: {
@@ -133,16 +151,17 @@ export function Layout() {
     );
   }
 
-  function getDescendants(startID: number, edges: Link[]): number[] {
+  function getDescendants(startID: number, edgesList: Link[]): number[] {
     const result = new Set<number>();
-    const stack = [startID];
+    const stack: number[] = [startID];
 
     while (stack.length > 0) {
       const current = stack.pop();
-      if (!current) continue;
+      if (current === undefined) continue;
 
-      const children = edges.filter((e) => e.from === current).map((e) => e.to);
-
+      const children = edgesList
+        .filter((e) => e.from === current)
+        .map((e) => e.to);
       for (const childID of children) {
         if (!result.has(childID)) {
           result.add(childID);
@@ -155,15 +174,17 @@ export function Layout() {
     return Array.from(result);
   }
 
-  function getAncestors(startID: number, edges: Link[]): number[] {
+  function getAncestors(startID: number, edgesList: Link[]): number[] {
     const result = new Set<number>();
-    const stack = [startID];
+    const stack: number[] = [startID];
 
     while (stack.length > 0) {
       const current = stack.pop();
-      if (!current) continue;
+      if (current === undefined) continue;
 
-      const parents = edges.filter((e) => e.to === current).map((e) => e.from);
+      const parents = edgesList
+        .filter((e) => e.to === current)
+        .map((e) => e.from);
       for (const parentID of parents) {
         if (!result.has(parentID)) {
           result.add(parentID);
@@ -172,6 +193,7 @@ export function Layout() {
       }
     }
 
+    result.delete(startID);
     return Array.from(result);
   }
 

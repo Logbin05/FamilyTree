@@ -61,7 +61,7 @@ export function Sidebar({
         className={`
           bg-wrapper fixed h-[90vh] m-4 rounded-2xl shadow-lg p-4
           flex flex-col justify-start z-50 transition-all duration-300
-          ${isOpen ? "w-[10%] items-start" : "w-[60px] items-center"}
+          ${isOpen ? "w-[10%] items-start" : "w-[90px] items-center"}
           hidden md:flex
         `}
       >
@@ -76,7 +76,7 @@ export function Sidebar({
         <button
           onClick={onToggle}
           className="mb-4 text-white bg-third/30 flex justify-center
-          hover:bg-third/50 px-3 py-2 rounded-xl w-full text-2xl"
+          hover:bg-third/50 px-7 py-3 rounded-xl w-full text-2xl"
         >
           {isOpen ? (
             <BiX />
@@ -89,7 +89,7 @@ export function Sidebar({
 
         <nav className="flex flex-col w-full">
           <div className="flex items-center gap-3 mb-6">
-            <TbBinaryTree2 className="text-fourth text-3xl" />
+            <TbBinaryTree2 className="text-fourth text-5xl m-auto" />
             {isOpen && (
               <span className="text-fourth text-2xl font-semibold">
                 Family Tree
@@ -102,16 +102,17 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={() => onAddedNode("parent")}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+                className="w-full flex items-center justify-center gap-2 px-7 py-3
+                rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
               >
                 {isOpen ? (
                   <>
                     <HiUsers className="size-10" />
-                    <span className="font-medium">Добавить родителей</span>
+                    <span className="font-light text-xl">Добавить родителей</span>
                   </>
                 ) : (
                   <span>
-                    <HiUsers />
+                    <HiUsers className="size-8" />
                   </span>
                 )}
               </button>
@@ -121,16 +122,19 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={() => onAddedNode("child")}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+                className="w-full flex items-center justify-center gap-2 px-7 py-3
+                rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
               >
                 {isOpen ? (
                   <>
-                    <FaChildReaching className="size-10" />
-                    <span className="font-medium">Добавить ребёнка</span>
+                    <FaChildReaching className="size-8" />
+                    <span className="font-light text-xl">
+                      Добавить ребёнка
+                    </span>
                   </>
                 ) : (
                   <span>
-                    <FaChildReaching />
+                    <FaChildReaching className="size-8" />
                   </span>
                 )}
               </button>
@@ -142,16 +146,17 @@ export function Sidebar({
                 onClick={() =>
                   selectedNode && onRemoveNode(selectedNode.node.id)
                 }
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+                className="w-full flex items-center justify-center gap-2 px-7 py-3
+                rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
               >
                 {isOpen ? (
                   <>
-                    <BiSolidTrashAlt />
-                    <span className="font-medium">Удалить</span>
+                    <BiSolidTrashAlt className="size-6" />
+                    <span className="font-light text-xl">Удалить</span>
                   </>
                 ) : (
                   <span>
-                    <BiSolidTrashAlt />
+                    <BiSolidTrashAlt className="size-8" />
                   </span>
                 )}
               </button>
@@ -161,16 +166,17 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={() => DownloadPDF(nodes, edges ?? [], svgRef.current!)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+                className="w-full flex items-center justify-center gap-2 px-7 py-3
+                rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
               >
                 {isOpen ? (
                   <>
-                    <BiDownload />
-                    <span className="font-medium">Скачать</span>
+                    <BiDownload className="size-8" />
+                    <span className="font-light text-xl">Скачать</span>
                   </>
                 ) : (
                   <span>
-                    <BiDownload />
+                    <BiDownload className="size-8" />
                   </span>
                 )}
               </button>
@@ -180,16 +186,17 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={handleUploadClick}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
+                className="w-full flex items-center justify-center gap-2 px-7 py-3
+                rounded-xl bg-third/30 hover:bg-third/50 transition-all duration-200 text-white"
               >
                 {isOpen ? (
                   <>
-                    <BiUpload />
-                    <span className="font-medium">Загрузить</span>
+                    <BiUpload className="size-8" />
+                    <span className="font-light text-xl">Загрузить</span>
                   </>
                 ) : (
                   <span>
-                    <BiUpload />
+                    <BiUpload className="size-8" />
                   </span>
                 )}
               </button>
@@ -198,11 +205,11 @@ export function Sidebar({
         </nav>
       </header>
 
-      <header className="bg-wrapper fixed bottom-0 left-0 w-full h-16 flex items-center justify-between px-4 z-50 rounded-t-2xl shadow-lg md:hidden">
-        <TbBinaryTree2 className="text-fourth text-3xl" />
-
+      <header
+        className="bg-wrapper fixed bottom-0 left-0 w-full h-16 flex items-center
+      justify-between px-4 z-50 rounded-t-2xl shadow-lg md:hidden"
+      >
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => onAddedNode("parent")}
@@ -218,7 +225,6 @@ export function Sidebar({
             >
               <FaChildReaching className="text-xl" />
             </button>
-          </div>
 
           <button
             type="button"

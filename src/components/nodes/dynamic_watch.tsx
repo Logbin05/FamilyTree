@@ -1,6 +1,21 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useRef } from "react";
 import type { NodeProps } from "@type/node";
+
+const EDITABLE_KEYS: (keyof Omit<NodeProps["node"], "id" | "x" | "y">)[] = [
+  "name",
+  "birthDate",
+  "location",
+  "biography",
+];
+
+const LABELS = {
+  name: "Имя",
+  birthDate: "Дата рождения",
+  location: "Место жительства",
+  biography: "Биография",
+} as const;
 
 interface DynamicWatchProps {
   node: NodeProps["node"];
@@ -8,61 +23,34 @@ interface DynamicWatchProps {
 }
 
 export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
-  const editableKeys: (keyof Omit<NodeProps["node"], "id" | "x" | "y">)[] = [
-    "name",
-    "birthDate",
-    "location",
-    "biography",
-  ];
-
-  const labels: Record<(typeof editableKeys)[number], string> = {
-    name: "Имя",
-    birthDate: "Дата рождения",
-    location: "Место жительства",
-    biography: "Биография",
-  };
-
   const [formData, setFormData] = useState<
-    Partial<
-      Record<keyof Omit<NodeProps["node"], "id" | "x" | "y">, string | number>
-    >
+    Partial<Record<keyof typeof LABELS, string>>
   >({});
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const initialData: Partial<
-      Record<keyof Omit<NodeProps["node"], "id" | "x" | "y">, string | number>
-    > = {};
-    editableKeys.forEach((key) => {
-      const value = node[key];
-      initialData[key] = value !== undefined ? value : "";
+    const initialData: any = {};
+    EDITABLE_KEYS.forEach((key) => {
+      initialData[key] = node[key] ?? "";
     });
     setFormData(initialData);
-  }, [node, editableKeys]);
+  }, [node]);
 
-  function handleChange(
-    key: keyof Omit<NodeProps["node"], "id" | "x" | "y">,
-    value: string
-  ) {
-    let parsedValue: string = value;
-    if (key === "birthDate") {
-      const n = value;
-      parsedValue = n;
-    }
-
-    setFormData((prev) => ({ ...prev, [key]: parsedValue }));
-    onChange({ [key]: parsedValue });
+  function handleChange(key: keyof typeof LABELS, value: string) {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    onChange({ [key]: value });
   }
 
   function handleFocus(e: React.FocusEvent<HTMLInputElement>) {
-    if (containerRef.current) {
-      const rect = e.target.getBoundingClientRect();
-      containerRef.current.scrollTo({
-        top: rect.y -2523,
-        behavior: "smooth",
-      });
-    }
+    if (!containerRef.current) return;
+
+    const rect = e.target.getBoundingClientRect();
+
+    containerRef.current.scrollTo({
+      top: rect.y - 250,
+      behavior: "smooth",
+    });
   }
 
   return (
@@ -72,13 +60,14 @@ export function DynamicWatch({ node, onChange }: DynamicWatchProps) {
       onMouseMove={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
-      className="p-2 bg-wrapper rounded-lg shadow-sm flex z-9999 flex-col gap-2 w-full max-w-xs sm:max-w-sm"
+      className="p-2 bg-wrapper rounded-lg shadow-sm flex  flex-col gap-2 w-full max-w-xs sm:max-w-sm"
     >
-      {editableKeys.map((key) => (
+      {EDITABLE_KEYS.map((key) => (
         <div key={key} className="grid grid-cols-2 gap-2">
           <label className="text-sm font-medium text-white">
-            {labels[key]}
+            {LABELS[key]}
           </label>
+
           <input
             type="text"
             value={formData[key] ?? ""}
