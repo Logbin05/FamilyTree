@@ -54,7 +54,7 @@ export async function DownloadPDF(nodes: NodeProps[], edges: Link[] = [], svg?: 
   });
 
   nodes.forEach((n) => {
-    content.push({ text: `⏣ Имя: ${n.node.name}`, fontSize: 12 });
+    content.push({ text: ` Имя: ${n.node.name}`, fontSize: 12 });
     if (n.node.birthDate)
       content.push({
         text: `Год рождения: ${n.node.birthDate}`,
